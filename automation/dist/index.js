@@ -17,7 +17,7 @@ function openMeet(driver) {
     return __awaiter(this, void 0, void 0, function* () {
         const name = "Meeting bot";
         try {
-            yield driver.get("https://meet.google.com/aih-kqbw-udv");
+            yield driver.get("https://meet.google.com/ovy-susr-ezb");
             try {
                 const popupButton = yield driver.wait(selenium_webdriver_1.until.elementLocated(selenium_webdriver_1.By.xpath('//span[contains(text(),"Got it")]')), 5000);
                 yield popupButton.click();

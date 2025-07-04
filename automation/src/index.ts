@@ -8,7 +8,7 @@ async function openMeet(driver: WebDriver) {
   const name = "Meeting bot";
 
   try {
-    await driver.get("https://meet.google.com/aih-kqbw-udv");
+    await driver.get("https://meet.google.com/ovy-susr-ezb");
 
     try {
       const popupButton = await driver.wait(

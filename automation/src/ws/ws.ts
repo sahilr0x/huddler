@@ -1,6 +1,8 @@
 import WebSocket, { WebSocketServer } from "ws";
-import fs from "fs";
-import path from "path";
+import dotenv from "dotenv";
+import { CreateS3MultipartUploader } from "../multipart";
+
+dotenv.config();
 
 interface ServerState {
   wss: WebSocketServer;
@@ -9,49 +11,65 @@ interface ServerState {
 
 async function handleClientConnection(
   ws: WebSocket,
-  clients: Set<WebSocket>
+  clients: Set<WebSocket>,
+  bucketName: string
 ): Promise<void> {
   console.log("New client connected");
   clients.add(ws);
 
-  const folderPath = path.resolve(__dirname, "../recordings");
-  if (!fs.existsSync(folderPath)) {
-    fs.mkdirSync(folderPath, { recursive: true });
+  const filename = `test-videos/test-${Date.now()}.webm`;
+  const uploader = CreateS3MultipartUploader(bucketName, filename);
+
+  try {
+    await uploader.initializeUpload();
+
+    ws.on("message", async (data: Buffer) => {
+      if (Buffer.isBuffer(data)) {
+        console.log(`Received blob of size: ${data.length} bytes`);
+        try {
+          await uploader.addChunk(data);
+        } catch (error) {
+          console.error("Error uploading chunk:", error);
+          await uploader.abortUpload();
+        }
+      } else {
+        console.warn("Received non-blob data, ignoring");
+      }
+    });
+
+    ws.on("close", async () => {
+      console.log("Client disconnected");
+      try {
+        await uploader.completeUpload();
+      } catch (error) {
+        console.error("Error completing upload:", error);
+        await uploader.abortUpload();
+      }
+      clients.delete(ws);
+    });
+
+    ws.on("error", async (error: Error) => {
+      console.error("WebSocket error:", error);
+      try {
+        await uploader.abortUpload();
+      } catch (abortError) {
+        console.error("Error aborting upload:", abortError);
+      }
+      clients.delete(ws);
+    });
+  } catch (error) {
+    console.error("Error initializing upload:", error);
+    ws.close();
   }
-
-  const filename = `recording-${Date.now()}.webm`;
-  const filePath = path.join(folderPath, filename);
-  console.log("Saving file to:", filePath);
-  const writeStream = fs.createWriteStream(filePath);
-
-  ws.on("message", (data: Buffer) => {
-    if (Buffer.isBuffer(data)) {
-      console.log(`Received chunk of size: ${data.length} bytes`);
-      writeStream.write(data);
-    } else {
-      console.warn("Received non-blob data, ignoring");
-    }
-  });
-
-  ws.on("close", () => {
-    console.log("Client disconnected, closing file");
-    writeStream.end();
-    clients.delete(ws);
-  });
-
-  ws.on("error", (error: Error) => {
-    console.error("WebSocket error:", error);
-    writeStream.end();
-    clients.delete(ws);
-  });
 }
 
 function createWebSocketServer(port: number): ServerState {
   const wss = new WebSocketServer({ port });
   const clients = new Set<WebSocket>();
+  const bucketName = "ghostai-automation-1";
 
   wss.on("connection", (ws: WebSocket) => {
-    handleClientConnection(ws, clients);
+    handleClientConnection(ws, clients, bucketName);
     console.log(`Total clients connected: ${clients.size}`);
   });
 
