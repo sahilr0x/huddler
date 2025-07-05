@@ -3,12 +3,13 @@ import { Options } from "selenium-webdriver/chrome";
 import { Builder, Browser, By, until } from "selenium-webdriver";
 import { CHROME_CONSTANTS } from "./constants";
 import { InitializeWebSocketServer } from "./ws/ws";
+import { error } from "console";
 
 async function openMeet(driver: WebDriver) {
   const name = "Meeting bot";
 
   try {
-    await driver.get("https://meet.google.com/ovy-susr-ezb");
+    await driver.get("https://meet.google.com/com-ojkf-srg");
 
     try {
       const popupButton = await driver.wait(
@@ -24,6 +25,10 @@ async function openMeet(driver: WebDriver) {
       until.elementLocated(By.xpath('//input[@aria-label="Your name"]')),
       10000
     );
+
+    ////*[@id="yDmH0d"]/div[3]/div[2]/div/div[2]/button/span
+
+    // NoSuchWindowError: no such window: target window already closed
 
     await nameInput.clear();
     await nameInput.sendKeys(name);
@@ -48,6 +53,32 @@ async function openMeet(driver: WebDriver) {
       10000
     );
     await joinButton.click();
+
+    const meetKeepUSafeBUtton = await driver.wait(
+      until.elementLocated(
+        By.xpath(
+          '//*[@id="yDmH0d"]/div[3]/span/div[2]/div/div/div[3]/div[2]/button/span[6]'
+        )
+      )
+    );
+    await meetKeepUSafeBUtton.click();
+
+    try {
+      const counterPopup = await driver.wait(
+        until.elementLocated(
+          By.xpath('//*[@id="yDmH0d"]/div[3]/div[2]/div/div[2]/button')
+        ),
+        30000
+      );
+
+      if (counterPopup) {
+        await counterPopup.click();
+      }
+    } catch (err) {
+      console.error("counterpop not found", err);
+    }
+
+    // VfPpkd - RLmnJb;
   } catch (e) {
     console.error(" Error:", e);
   } finally {

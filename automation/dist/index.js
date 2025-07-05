@@ -17,7 +17,7 @@ function openMeet(driver) {
     return __awaiter(this, void 0, void 0, function* () {
         const name = "Meeting bot";
         try {
-            yield driver.get("https://meet.google.com/ovy-susr-ezb");
+            yield driver.get("https://meet.google.com/com-ojkf-srg");
             try {
                 const popupButton = yield driver.wait(selenium_webdriver_1.until.elementLocated(selenium_webdriver_1.By.xpath('//span[contains(text(),"Got it")]')), 5000);
                 yield popupButton.click();
@@ -26,6 +26,8 @@ function openMeet(driver) {
                 console.log("No 'Got it' popup");
             }
             const nameInput = yield driver.wait(selenium_webdriver_1.until.elementLocated(selenium_webdriver_1.By.xpath('//input[@aria-label="Your name"]')), 10000);
+            ////*[@id="yDmH0d"]/div[3]/div[2]/div/div[2]/button/span
+            // NoSuchWindowError: no such window: target window already closed
             yield nameInput.clear();
             yield nameInput.sendKeys(name);
             const micMute = yield driver.wait(selenium_webdriver_1.until.elementLocated(selenium_webdriver_1.By.xpath("//div[@role='button' and @aria-label='Turn off microphone']")));
@@ -34,6 +36,18 @@ function openMeet(driver) {
             yield webOff.click();
             const joinButton = yield driver.wait(selenium_webdriver_1.until.elementLocated(selenium_webdriver_1.By.xpath('//span[contains(text(),"Ask to join")]')), 10000);
             yield joinButton.click();
+            const meetKeepUSafeBUtton = yield driver.wait(selenium_webdriver_1.until.elementLocated(selenium_webdriver_1.By.xpath('//*[@id="yDmH0d"]/div[3]/span/div[2]/div/div/div[3]/div[2]/button/span[6]')));
+            yield meetKeepUSafeBUtton.click();
+            try {
+                const counterPopup = yield driver.wait(selenium_webdriver_1.until.elementLocated(selenium_webdriver_1.By.xpath('//*[@id="yDmH0d"]/div[3]/div[2]/div/div[2]/button')), 30000);
+                if (counterPopup) {
+                    yield counterPopup.click();
+                }
+            }
+            catch (err) {
+                console.error("counterpop not found", err);
+            }
+            // VfPpkd - RLmnJb;
         }
         catch (e) {
             console.error(" Error:", e);
